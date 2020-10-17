@@ -68,7 +68,7 @@ def DeepREINFORCE(cfg, env_process, env_folder):
 
         # Select initial position
         reset_to_initial(0, reset_array, client, vehicle_name=name_agent)
-        old_posit[name_agent] = client.simGetVehiclePose(vehicle_name=name_agent)
+        old_posit[name_agent] = client.simGetVehiclePose()
 
     # Initialize variables
     iter = 1
@@ -131,7 +131,7 @@ def DeepREINFORCE(cfg, env_process, env_folder):
 
                     start_time = time.time()
                     if switch_env:
-                        posit1_old = client.simGetVehiclePose(vehicle_name=name_agent)
+                        posit1_old = client.simGetVehiclePose()
                         times_switch[name_agent] = times_switch[name_agent] + 1
                         level_state[name_agent][level[name_agent]] = current_state[name_agent]
                         level_posit[name_agent][level[name_agent]] = posit1_old
@@ -146,12 +146,12 @@ def DeepREINFORCE(cfg, env_process, env_folder):
                               level_name[name_agent][level[name_agent]])
 
                         if times_switch[name_agent] < len(reset_array[name_agent]):
-                            reset_to_initial(level[name_agent], reset_array, client, vehicle_name=name_agent)
+                            reset_to_initial(level[name_agent], reset_array, client)
                         else:
                             current_state[name_agent] = level_state[name_agent][level[name_agent]]
                             posit1_old = level_posit[name_agent][level[name_agent]]
-                            reset_to_initial(level[name_agent], reset_array, client, vehicle_name=name_agent)
-                            client.simSetVehiclePose(posit1_old, ignore_collison=True, vehicle_name=name_agent)
+                            reset_to_initial(level[name_agent], reset_array, client)
+                            client.simSetVehiclePose(posit1_old, ignore_collison=True)
                             time.sleep(0.1)
 
                         last_crash[name_agent] = last_crash_array[name_agent][level[name_agent]]
@@ -173,7 +173,7 @@ def DeepREINFORCE(cfg, env_process, env_folder):
                         # print('Got state')
 
                         # Get GPS information
-                        posit[name_agent] = client.simGetVehiclePose(vehicle_name=name_agent)
+                        posit[name_agent] = client.simGetVehiclePose()
                         position = posit[name_agent].position
                         old_p = np.array(
                             [old_posit[name_agent].position.x_val, old_posit[name_agent].position.y_val])
@@ -247,7 +247,7 @@ def DeepREINFORCE(cfg, env_process, env_folder):
                                 reset_to_initial(level[name_agent], reset_array, client, vehicle_name=name_agent)
                                 # time.sleep(0.2)
                                 current_state[name_agent] = agent[name_agent].get_state()
-                                old_posit[name_agent] = client.simGetVehiclePose(vehicle_name=name_agent)
+                                old_posit[name_agent] = client.simGetVehiclePose()
 
                                 if epi_num[name_agent] % 100 == 0:
                                     agent[name_agent].network_model.save_network(algorithm_cfg.network_path,
@@ -310,7 +310,7 @@ def DeepREINFORCE(cfg, env_process, env_folder):
                         print('Drone collided')
                         print("Total distance traveled: ", np.round(distance[name_agent], 2))
                         active = False
-                        client.moveByVelocityAsync(vx=0, vy=0, vz=0, duration=1, vehicle_name=name_agent).join()
+                        client.moveByVelocityAsync(vx=0, vy=0, vz=0, duration=1).join()
 
                         if nav_x:  # Nav_x is empty if the drone collides in first iteration
                             ax_nav.plot(nav_x.pop(), nav_y.pop(), 'r*', linewidth=20)
@@ -320,7 +320,7 @@ def DeepREINFORCE(cfg, env_process, env_folder):
                         close_env(env_process)
                         print('Figures saved')
                     else:
-                        posit[name_agent] = client.simGetVehiclePose(vehicle_name=name_agent)
+                        posit[name_agent] = client.simGetVehiclePose()
                         distance[name_agent] = distance[name_agent] + np.linalg.norm(np.array(
                             [old_posit[name_agent].position.x_val - posit[name_agent].position.x_val,
                              old_posit[name_agent].position.y_val - posit[name_agent].position.y_val]))
