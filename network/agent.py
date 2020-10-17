@@ -49,7 +49,7 @@ class PedraAgent():
         ignore_collision = False
         sqrt_num_actions = np.sqrt(num_actions)
 
-        posit = self.client.simGetVehiclePose(vehicle_name=self.vehicle_name)
+        posit = self.client.simGetVehiclePose()
         pos = posit.position
         orientation = posit.orientation
 
@@ -76,7 +76,7 @@ class PedraAgent():
 
             self.client.simSetVehiclePose(
                 airsim.Pose(airsim.Vector3r(x, y, z), airsim.to_quaternion(0, 0, alpha + psi)),
-                ignore_collison=ignore_collision, vehicle_name=self.vehicle_name)
+                ignore_collison=ignore_collision)
         elif Mode == 'dynamic':
             r_infer = 0.4
             vx = r_infer * np.cos(alpha + psi)
@@ -88,9 +88,9 @@ class PedraAgent():
                                             drivetrain=airsim.DrivetrainType.MaxDegreeOfFreedom,
                                             yaw_mode=airsim.YawMode(is_rate=False,
                                                                     yaw_or_rate=180 * (alpha + psi) / np.pi),
-                                            vehicle_name=self.vehicle_name)
+                                            )
             time.sleep(0.07)
-            self.client.moveByVelocityAsync(vx=0, vy=0, vz=0, duration=1, vehicle_name=self.vehicle_name)
+            self.client.moveByVelocityAsync(vx=0, vy=0, vz=0, duration=1)
 
 
     def get_CustomDepth(self, cfg):
@@ -102,8 +102,7 @@ class PedraAgent():
             while not correct and tries < max_tries:
                 tries += 1
                 responses = self.client.simGetImages(
-                    [airsim.ImageRequest(camera_name, airsim.ImageType.DepthVis, False, False)],
-                    vehicle_name=self.vehicle_name)
+                    [airsim.ImageRequest(camera_name, airsim.ImageType.DepthVis, False, False)])
                 img1d = np.fromstring(responses[0].image_data_uint8, dtype=np.uint8)
                 # AirSim bug: Sometimes it returns invalid depth map with a few 255 and all 0s
                 if np.max(img1d)==255 and np.mean(img1d)<0.05:
@@ -113,8 +112,7 @@ class PedraAgent():
             depth = img1d.reshape(responses[0].height, responses[0].width, 3)[:, :, 0]
             thresh = 50
         elif cfg.env_type == 'outdoor' or cfg.env_type == 'Outdoor':
-            responses = self.client.simGetImages([airsim.ImageRequest(1, airsim.ImageType.DepthPlanner, True)],
-                                                 vehicle_name=self.vehicle_name)
+            responses = self.client.simGetImages([airsim.ImageRequest(1, airsim.ImageType.DepthPlanner, True)])
             depth = airsim.list_to_2d_float_array(responses[0].image_data_float, responses[0].width, responses[0].height)
             thresh = 50
 
@@ -139,7 +137,7 @@ class PedraAgent():
         return state_rgb
 
     def GetAgentState(self):
-        return self.client.simGetCollisionInfo(vehicle_name=self.vehicle_name)
+        return self.client.simGetCollisionInfo()
 
     ###########################################################################
     # RL related modules

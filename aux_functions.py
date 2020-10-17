@@ -69,8 +69,8 @@ def start_environment(env_name):
     print_orderly('Environment', 80)
     env_folder = os.path.dirname(os.path.abspath(__file__)) + "/unreal_envs/" + env_name + "/"
     path = env_folder + env_name + ".exe"
-    # env_process = []
-    env_process = subprocess.Popen(path)
+    env_process = []
+    # env_process = subprocess.Popen(path)
     time.sleep(5)
     print("Successfully loaded environment: " + env_name)
 
@@ -278,7 +278,7 @@ def reset_to_initial(level, reset_array, client, vehicle_name):
     reset_pos = reset_array[vehicle_name][level]
     # reset_pos = p
 
-    client.simSetVehiclePose(reset_pos, ignore_collison=True, vehicle_name=vehicle_name)
+    client.simSetVehiclePose(reset_pos, ignore_collison=True)
     time.sleep(0.05)
 
 def print_orderly(str, n):
@@ -295,14 +295,14 @@ def connect_drone(ip_address='127.0.0.0', phase='infer', num_agents=1, client=[]
     time.sleep(1)
 
     old_posit = {}
-    for agents in range(num_agents):
-        name_agent = "drone" + str(agents)
-        client.enableApiControl(True, name_agent)
-        client.armDisarm(True, name_agent)
-        # time.sleep(1)
-        client.takeoffAsync(vehicle_name=name_agent)
-        time.sleep(1)
-        old_posit[name_agent] = client.simGetVehiclePose(vehicle_name=name_agent)
+
+    name_agent = "drone0"
+    client.enableApiControl(True)
+    client.armDisarm(True)
+    # time.sleep(1)
+    client.takeoffAsync()
+    time.sleep(1)
+    old_posit[name_agent] = client.simGetVehiclePose()
 
     initZ = old_posit[name_agent].position.z_val
 
@@ -331,7 +331,7 @@ def get_MonocularImageRGB(client, vehicle_name):
 
     responses1 = client.simGetImages([
         airsim.ImageRequest('front_center', airsim.ImageType.Scene, False,
-                            False)], vehicle_name=vehicle_name)  # scene vision image in uncompressed RGBA array
+                            False)])  # scene vision image in uncompressed RGBA array
 
     response = responses1[0]
     img1d = np.fromstring(response.image_data_uint8, dtype=np.uint8)  # get numpy array
@@ -349,7 +349,7 @@ def get_StereoImageRGB(client, vehicle_name):
         [
         airsim.ImageRequest('front_left', airsim.ImageType.Scene, False, False),
         airsim.ImageRequest('front_right', airsim.ImageType.Scene, False, False)
-        ], vehicle_name=vehicle_name)
+        ])
 
     for i in range(2):
         response = responses[i]
@@ -365,7 +365,7 @@ def get_StereoImageRGB(client, vehicle_name):
 def get_CustomImage(client, vehicle_name, camera_name):
     responses1 = client.simGetImages([
         airsim.ImageRequest(camera_name, airsim.ImageType.Scene, False,
-                            False)], vehicle_name=vehicle_name)  # scene vision image in uncompressed RGBA array
+                            False)])  # scene vision image in uncompressed RGBA array
 
     response = responses1[0]
     img1d = np.fromstring(response.image_data_uint8, dtype=np.uint8)  # get numpy array
