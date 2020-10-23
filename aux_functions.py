@@ -290,7 +290,7 @@ def connect_drone(ip_address='127.0.0.0', phase='infer', num_agents=1, client=[]
     if client != []:
         client.reset()
     print_orderly('Drone', 80)
-    client = airsim.MultirotorClient(ip=ip_address, timeout_value=10)
+    client = airsim.MultirotorClient()
     client.confirmConnection()
     time.sleep(1)
 
