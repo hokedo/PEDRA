@@ -14,6 +14,12 @@ from util.transformations import euler_from_quaternion
 from configs.read_cfg import read_cfg, update_algorithm_cfg
 
 
+
+def calculate_distance(drone_position, goal):
+    p = np.array([drone_position.x_val, drone_position.y_val, drone_position.z_val])
+    goal_position = np.array(goal)
+    return np.linalg.norm(p - goal_position)
+
 def DeepQLearning(cfg, env_process, env_folder):
     algorithm_cfg = read_cfg(config_filename='configs/DeepQLearning.cfg', verbose=True)
     algorithm_cfg.algorithm = cfg.algorithm
@@ -188,17 +194,27 @@ def DeepQLearning(cfg, env_process, env_folder):
                         distance[name_agent] = distance[name_agent] + np.linalg.norm(new_p - old_p)
                         old_posit[name_agent] = posit[name_agent]
 
+                        prev_distance_to_goal = calculate_distance(old_posit[name_agent], [6.282084941864014, 63.05448913574219, -5.43336296081543])
+                        distance_to_goal = calculate_distance(posit[name_agent], [6.282084941864014, 63.05448913574219, -5.43336296081543])
                         reward, crash = agent[name_agent].reward_gen(new_depth1, action, crash_threshold, thresh, debug,
                                                                      cfg)
+
+                        reward = -1 + prev_distance_to_goal - distance_to_goal
 
                         ret[name_agent] = ret[name_agent] + reward
                         agent_state = agent[name_agent].GetAgentState()
 
-                        if agent_state.has_collided or distance[name_agent] < 0.1:
+                        if agent_state.has_collided or distance[name_agent] < 0.1 or last_crash[name_agent] > 200 or distance_to_goal > 30:
                             num_collisions[name_agent] = num_collisions[name_agent] + 1
                             print('crash')
                             crash = True
-                            reward = -1
+                            reward = -100
+
+                        if distance_to_goal < 2:
+                            print("REACHED CHECKPOINT!!!!")
+                            crash = True
+                            reward = 100
+
                         data_tuple = []
                         data_tuple.append([current_state[name_agent], action, new_state[name_agent], reward, crash])
                         # TODO: one replay memory global, target_agent, agent: DONE
